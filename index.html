@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quantum Shield - Efecto Fotoeléctrico Interactivo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --bg-main: #0B0F19;
+      --bg-card: #151C2C;
+      --bg-card-hover: #1E293B;
+      --accent-cyan: #00F2FE;
+      --accent-magenta: #FF0844;
+      --accent-yellow: #FFB100;
+      --accent-green: #00E676;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --font-title: 'Fredoka', sans-serif;
+      --font-body: 'Outfit', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 30px;
+    }
+
+    /* Header */
+    header {
+      background: rgba(21, 28, 44, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-cyan), #4FACFE);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.4);
+    }
+
+    .brand-text h1 {
+      font-family: var(--font-title);
+      font-size: 1.1rem;
+      background: linear-gradient(90deg, #00F2FE, #4FACFE);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    /* Tabs Layout */
+    .nav-tabs {
+      display: flex;
+      background: var(--bg-card);
+      padding: 4px;
+      border-radius: 12px;
+      gap: 4px;
+      margin: 12px 12px 0 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 4px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-title);
+      font-size: 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #00F2FE, #00C6FF);
+      color: #000;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 242, 254, 0.3);
+    }
+
+    /* Main Container */
+    .container {
+      padding: 12px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-family: var(--font-title);
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    /* Scenario Selectors */
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .scenario-btn {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.75rem;
+      font-family: var(--font-body);
+      transition: all 0.2s;
+    }
+
+    .scenario-btn .icon {
+      font-size: 1.2rem;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .scenario-btn.active {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.1);
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    /* Canvas Simulation Container */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      background: #050811;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 242, 254, 0.3);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(11, 15, 25, 0.85);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(4px);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #FF0844;
+    }
+
+    .status-dot.active {
+      background: #00E676;
+      box-shadow: 0 0 8px #00E676;
+    }
+
+    .current-display {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(11, 15, 25, 0.85);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: var(--accent-yellow);
+      font-weight: 700;
+      backdrop-filter: blur(4px);
+    }
+
+    .block-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #FF0844, #FF4E50);
+      color: #FFF;
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 8, 68, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s;
+    }
+
+    .block-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .metric-box {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .metric-box label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .metric-box span {
+      font-family: var(--font-title);
+      font-size: 1.1rem;
+      color: var(--accent-cyan);
+    }
+
+    /* Explainer Alert Box */
+    .explainer-box {
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.08), rgba(79, 172, 254, 0.08));
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .explainer-box .emoji {
+      font-size: 1.4rem;
+    }
+
+    /* Controls Form */
+    .control-group {
+      margin-bottom: 14px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .control-label span.value {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--bg-main);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    /* Graph Canvas */
+    .graph-container {
+      width: 100%;
+      height: 120px;
+      background: var(--bg-main);
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      margin-top: 8px;
+      position: relative;
+    }
+
+    /* Theory Cards */
+    .theory-card {
+      background: var(--bg-card);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .theory-card h3 {
+      font-family: var(--font-title);
+      font-size: 1rem;
+      margin-bottom: 6px;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .theory-card p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Quiz Challenge */
+    .quiz-option {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .quiz-option:active {
+      background: var(--bg-card-hover);
+    }
+
+    .quiz-option.correct {
+      border-color: var(--accent-green);
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    .quiz-option.wrong {
+      border-color: var(--accent-magenta);
+      background: rgba(255, 8, 68, 0.15);
+      color: var(--accent-magenta);
+    }
+
+    .streak-badge {
+      display: inline-block;
+      background: rgba(255, 177, 0, 0.15);
+      border: 1px solid var(--accent-yellow);
+      color: var(--accent-yellow);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚛️</div>
+      <div class="brand-text">
+        <h1>QUANTUM SHIELD</h1>
+        <p>Efecto Fotoeléctrico en la Vida Real</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('lab')">🧪 Laboratorio</button>
+    <button class="tab-btn" onclick="switchTab('theory')">💡 Teoría Fácil</button>
+    <button class="tab-btn" onclick="switchTab('game')">🎮 Desafíos</button>
+  </div>
+
+  <!-- Container -->
+  <div class="container">
+
+    <!-- TAB 1: LABORATORIO -->
+    <div id="tab-lab" class="tab-content active">
+      
+      <!-- Escenario Select -->
+      <div class="card">
+        <div class="card-title">🛡️ Elige una Fotocélula Real</div>
+        <div class="scenario-grid">
+          <button class="scenario-btn active" onclick="selectScenario('elevator')">
+            <span class="icon">🛗</span> Ascensor
+          </button>
+          <button class="scenario-btn" onclick="selectScenario('museum')">
+            <span class="icon">🏛️</span> Alarma Museo
+          </button>
+          <button class="scenario-btn" onclick="selectScenario('street')">
+            <span class="icon">💡</span> Farola Solar
+          </button>
+        </div>
+
+        <!-- Canvas principal de simulación -->
+        <div class="canvas-container" id="canvas-wrapper">
+          <canvas id="simCanvas"></canvas>
+          <div class="status-badge">
+            <div id="statusDot" class="status-dot"></div>
+            <span id="statusText">ESPERANDO LUZ...</span>
+          </div>
+          <div class="current-display">
+            ⚡ Corriente: <span id="currentVal">0.00</span> mA
+          </div>
+        </div>
+
+        <button class="block-btn" id="blockBtn" onclick="toggleBlock()">
+          ✋ Bloquear Haz de Luz (Simular Interrupción)
+        </button>
+
+        <!-- Métricas Principales en eV -->
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <label>ENERGÍA DEL FOTÓN (E)</label>
+            <span id="metricE">0.00 eV</span>
+          </div>
+          <div class="metric-box">
+            <label>COSTO DE SALIDA (W)</label>
+            <span id="metricW" style="color: var(--accent-yellow)">0.00 eV</span>
+          </div>
+          <div class="metric-box">
+            <label>ENERGÍA SOBRANTE (K)</label>
+            <span id="metricK" style="color: var(--accent-green)">0.00 eV</span>
+          </div>
+          <div class="metric-box">
+            <label>VELOCIDAD DE SALTO</label>
+            <span id="metricV" style="color: #4FACFE">0 km/s</span>
+          </div>
+        </div>
+
+        <!-- Explicador dinámico en vivo -->
+        <div class="explainer-box">
+          <span class="emoji" id="explainerEmoji">🧐</span>
+          <div id="explainerText">
+            Ajusta el color del láser. Si la energía de los fotones es menor al costo del metal, ¡los electrones no se liberarán!
+          </div>
+        </div>
+      </div>
+
+      <!-- Controles del Láser -->
+      <div class="card">
+        <div class="card-title">🎛️ Controles del Haz de Luz</div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Color / Frecuencia de Luz:</span>
+            <span class="value" id="labelWavelength">450 nm (Azul)</span>
+          </div>
+          <input type="range" id="sliderWavelength" min="100" max="900" value="450" oninput="updatePhysics()">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Potencia / Cantidad de Fotones:</span>
+            <span class="value" id="labelIntensity">70 %</span>
+          </div>
+          <input type="range" id="sliderIntensity" min="0" max="100" value="70" oninput="updatePhysics()">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Metal del Sensor (Fotocátodo):</span>
+          </div>
+          <select id="selectMetal" onchange="updatePhysics()">
+            <option value="2.3">Potasio (Sensor Sensible - Costo W = 2.3 eV)</option>
+            <option value="4.5">Silicio (Estándar Industrial - Costo W = 4.5 eV)</option>
+            <option value="5.1">Oro (Resistente - Costo W = 5.1 eV)</option>
+          </select>
+        </div>
+
+        <div class="card-title" style="font-size: 0.9rem; margin-top: 12px;">📈 Gráfico: Energía del Fotón vs Frecuencia</div>
+        <div class="graph-container">
+          <canvas id="graphCanvas"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: TEORÍA FÁCIL -->
+    <div id="tab-theory" class="tab-content">
+      
+      <div class="theory-card">
+        <h3>🍔 1. La Máquina Expendedora Cuántica</h3>
+        <p>
+          Imagina que un electrón es un refresco de <strong>$2.50 eV</strong> atrapado dentro de una máquina metal.
+          Los fotones de luz son tus monedas. Si lanzas monedas de $1.00 eV (Luz Roja), aunque abraces la máquina con 1000 monedas a la vez, <strong>¡ningún refresco saldrá!</strong>
+          Necesitas una sola moneda con el valor exacto o superior (Luz Ultravioleta) para liberar al electrón.
+        </p>
+      </div>
+
+      <div class="theory-card" style="border-left-color: var(--accent-yellow)">
+        <h3>💥 2. La Fórmula Simplificada de Einstein</h3>
+        <p>
+          Einstein explicó que la energía no se entrega poco a poco, sino en "paquetes individuales" llamados fotones:
+          <br><br>
+          <strong style="color: var(--accent-cyan); font-size: 1rem;">Energía del Fotón = Costo de Salida + Velocidad de Escape</strong>
+          <br><br>
+          • <strong>Energía (E):</strong> Depende del color de la luz. La luz azul/UV tiene más energía que la luz roja/infrarroja.<br>
+          • <strong>Costo de Salida (W):</strong> La fuerza con la que el metal aprisiona a sus electrones.<br>
+          • <strong>Energía Sobrante (K):</strong> Se convierte en la velocidad con la que sale volando el electrón.
+        </p>
+      </div>
+
+      <div class="theory-card" style="border-left-color: var(--accent-green)">
+        <h3>🚨 3. ¿Cómo funciona la Alarma o la Puerta del Ascensor?</h3>
+        <p>
+          1. Un láser apunta continuamente a una placa fotosensible.<br>
+          2. Los fotones del láser arrancan electrones, creando un <strong>flujo constante de electricidad</strong>.<br>
+          3. Cuando una persona pasa y <strong>bloquea la luz</strong>, el flujo de electrones se corta instantáneamente.<br>
+          4. La computadora detecta la caída de corriente e inmediatamente frena la puerta del ascensor o hace sonar la alarma.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- TAB 3: DESAFÍOS Y GAMIFICACIÓN -->
+    <div id="tab-game" class="tab-content">
+      <div class="card">
+        <div class="streak-badge" id="scoreBadge">🏆 Puntuación: 0 Puntos</div>
+        <div class="card-title" id="quizQuestion">Cargando desafío...</div>
+        
+        <div id="quizOptions"></div>
+
+        <div class="explainer-box" id="quizFeedback" style="display: none; margin-top: 12px;">
+          <span class="emoji" id="quizEmoji">🎯</span>
+          <div id="quizFeedbackText">---</div>
+        </div>
+
+        <button class="block-btn" id="nextQuizBtn" style="display: none; background: linear-gradient(135deg, #00F2FE, #4FACFE); color: #000;" onclick="loadNextQuestion()">
+          Siguiente Desafío ➡️
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ESTADO GLOBAL
+    let simState = {
+      scenario: 'elevator',
+      wavelength: 450,
+      intensity: 70,
+      workFunction: 2.3,
+      blocked: false,
+      photons: [],
+      electrons: [],
+      currentmA: 0,
+      score: 0,
+      currentQuizIndex: 0
+    };
+
+    const CONST_HC = 1240;
+
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const graphCanvas = document.getElementById('graphCanvas');
+    const graphCtx = graphCanvas.getContext('2d');
+
+    const quizData = [
+      {
+        q: "Si la luz roja no logra arrancar electrones de una fotocélula, ¿qué pasa si aumentas la potencia (brillo) al máximo?",
+        options: [
+          "Siguen sin salir electrones, solo habrá más fotones débiles rebotando.",
+          "Saldrán miles de electrones inmediatamente.",
+          "El metal explotará por exceso de luz."
+        ],
+        correct: 0,
+        exp: "¡Exacto! Aumentar el brillo solo lanza MÁS fotones, pero ninguno tiene la energía suficiente por sí solo para pagar el costo de salida."
+      },
+      {
+        q: "¿Qué sucede con los electrones si usas una luz Ultravioleta con más energía de la necesaria?",
+        options: [
+          "Se quedan atrapados dentro del metal.",
+          "Salen liberados y la energía sobrante los hace volar a gran velocidad.",
+          "Se convierten en fotones de nuevo."
+        ],
+        correct: 1,
+        exp: "¡Correcto! Toda la energía que sobra tras pagar el costo de salida (W) se transforma en energía cinética (velocidad)."
+      },
+      {
+        q: "¿Cómo detecta la puerta de un ascensor que hay una persona interrumpiendo el paso?",
+        options: [
+          "Mide el peso del piso del ascensor.",
+          "La persona bloquea el haz de luz, deteniendo la corriente fotoeléctrica.",
+          "El láser rebota en la piel y quema el circuito."
+        ],
+        correct: 1,
+        exp: "¡Gran trabajo! Al bloquear los fotones, el circuito deja de emitir electrones y la corriente cae a 0 mA, activando el freno de seguridad."
+        }
+    ];
+
+    function resizeCanvas() {
+      const wrapper = document.getElementById('canvas-wrapper');
+      if (wrapper) {
+        canvas.width = wrapper.getBoundingClientRect().width || 320;
+        canvas.height = wrapper.getBoundingClientRect().height || 220;
+      }
+
+      if (graphCanvas && graphCanvas.parentElement) {
+        graphCanvas.width = graphCanvas.parentElement.getBoundingClientRect().width || 300;
+        graphCanvas.height = graphCanvas.parentElement.getBoundingClientRect().height || 120;
+      }
+
+      drawGraph();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      if(tabName === 'lab') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('tab-lab').classList.add('active');
+        setTimeout(resizeCanvas, 100);
+      } else if(tabName === 'theory') {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('tab-theory').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        document.getElementById('tab-game').classList.add('active');
+        loadQuiz();
+      }
+    }
+
+    function selectScenario(type) {
+      simState.scenario = type;
+      document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+
+      const btnIndex = type === 'elevator' ? 0 : type === 'museum' ? 1 : 2;
+      document.querySelectorAll('.scenario-btn')[btnIndex].classList.add('active');
+
+      const blockBtn = document.getElementById('blockBtn');
+      if(type === 'elevator') {
+        blockBtn.innerHTML = '✋ Bloquear Haz de Luz (Simular Persona en Puerta)';
+      } else if(type === 'museum') {
+        blockBtn.innerHTML = '🕵️ Interrumpir Láser (Simular Intruso en Museo)';
+      } else {
+        blockBtn.innerHTML = '☁️ Cubrir con Nube (Simular Anochecer/Sombra)';
+      }
+
+      updatePhysics();
+    }
+
+    function toggleBlock() {
+      simState.blocked = !simState.blocked;
+      const blockBtn = document.getElementById('blockBtn');
+      if(simState.blocked) {
+        blockBtn.style.background = 'linear-gradient(135deg, #00E676, #00C6FF)';
+        blockBtn.style.color = '#000';
+        blockBtn.innerHTML = '🔄 Reorganizar / Quitar Obstáculo';
+      } else {
+        blockBtn.style.background = 'linear-gradient(135deg, #FF0844, #FF4E50)';
+        blockBtn.style.color = '#FFF';
+        selectScenario(simState.scenario);
+      }
+      updatePhysics();
+    }
+
+    function wavelengthToRGB(wavelength) {
+      let r, g, b;
+      if (wavelength >= 380 && wavelength < 440) {
+        r = -(wavelength - 440) / (440 - 380); g = 0; b = 1;
+      } else if (wavelength >= 440 && wavelength < 490) {
+        r = 0; g = (wavelength - 440) / (490 - 440); b = 1;
+      } else if (wavelength >= 490 && wavelength < 510) {
+        r = 0; g = 1; b = -(wavelength - 510) / (510 - 490);
+      } else if (wavelength >= 510 && wavelength < 580) {
+        r = (wavelength - 510) / (580 - 510); g = 1; b = 0;
+      } else if (wavelength >= 580 && wavelength < 645) {
+        r = 1; g = -(wavelength - 645) / (645 - 580); b = 0;
+      } else if (wavelength >= 645 && wavelength <= 780) {
+        r = 1; g = 0; b = 0;
+      } else if (wavelength < 380) {
+        r = 0.6; g = 0.1; b = 0.9;
+      } else {
+        r = 0.5; g = 0.0; b = 0.0;
+      }
+      return `rgb(${Math.floor(r * 255)}, ${Math.floor(g * 255)}, ${Math.floor(b * 255)})`;
+    }
+
+    function updatePhysics() {
+      const sliderW = document.getElementById('sliderWavelength');
+      const sliderI = document.getElementById('sliderIntensity');
+      const selectM = document.getElementById('selectMetal');
+
+      if (!sliderW || !sliderI || !selectM) return;
+
+      simState.wavelength = parseInt(sliderW.value);
+      simState.intensity = parseInt(sliderI.value);
+      simState.workFunction = parseFloat(selectM.value);
+
+      let colorName = "UV (Invisible)";
+      if(simState.wavelength >= 380 && simState.wavelength < 450) colorName = "Violeta";
+      else if(simState.wavelength >= 450 && simState.wavelength < 490) colorName = "Azul";
+      else if(simState.wavelength >= 490 && simState.wavelength < 570) colorName = "Verde";
+      else if(simState.wavelength >= 570 && simState.wavelength < 620) colorName = "Amarillo";
+      else if(simState.wavelength >= 620 && simState.wavelength <= 750) colorName = "Rojo";
+      else if(simState.wavelength > 750) colorName = "Infrarrojo";
+
+      document.getElementById('labelWavelength').innerText = `${simState.wavelength} nm (${colorName})`;
+      document.getElementById('labelIntensity').innerText = `${simState.intensity} %`;
+
+      const E = CONST_HC / simState.wavelength;
+      const W = simState.workFunction;
+      const K = Math.max(0, E - W);
+
+      const velocity = K > 0 ? Math.round(Math.sqrt(K) * 593) : 0;
+      const current = (K > 0 && !simState.blocked) ? ((simState.intensity / 100) * 5.2).toFixed(2) : "0.00";
+      simState.currentmA = parseFloat(current);
+
+      document.getElementById('metricE').innerText = `${E.toFixed(2)} eV`;
+      document.getElementById('metricW').innerText = `${W.toFixed(2)} eV`;
+      document.getElementById('metricK').innerText = `${K.toFixed(2)} eV`;
+      document.getElementById('metricV').innerText = `${velocity} km/s`;
+      document.getElementById('currentVal').innerText = current;
+
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      if(simState.blocked) {
+        statusDot.className = 'status-dot';
+        statusText.innerText = 'HAZ BLOQUEADO (INTERRUPCIÓN)';
+      } else if(simState.currentmA > 0) {
+        statusDot.className = 'status-dot active';
+        statusText.innerText = 'CIRCUITO ACTIVO (CORRIENTE FLUYENDO)';
+      } else {
+        statusDot.className = 'status-dot';
+        statusText.innerText = 'SIN CORRIENTE (LUZ MUY DÉBIL)';
+      }
+
+      const explainerEmoji = document.getElementById('explainerEmoji');
+      const explainerText = document.getElementById('explainerText');
+
+      if(simState.blocked) {
+        explainerEmoji.innerText = '⚠️';
+        explainerText.innerHTML = '<strong>¡Haz interrumpido!</strong> Un objeto bloquea los fotones. La corriente cayó a 0 mA. La fotocélula activó el motor de seguridad.';
+      } else if(E < W) {
+        explainerEmoji.innerText = '❌';
+        explainerText.innerHTML = `La energía del fotón (<strong>${E.toFixed(2)} eV</strong>) es MENOR al costo del metal (<strong>${W.toFixed(2)} eV</strong>). No importa cuánto subas la potencia, ¡los fotones rebotan sin liberar electrones!`;
+      } else {
+        explainerEmoji.innerText = '⚡';
+        explainerText.innerHTML = `¡Éxito Cuántico! La energía del fotón supera el costo. Cada fotón libera un electrón con <strong>${K.toFixed(2)} eV</strong> de velocidad sobrante, generando electricidad.`;
+      }
+
+      drawGraph();
+    }
+
+    function drawGraph() {
+      if(!graphCtx || !graphCanvas) return;
+      const w = graphCanvas.width;
+      const h = graphCanvas.height;
+
+      graphCtx.clearRect(0, 0, w, h);
+
+      graphCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      graphCtx.lineWidth = 1;
+      graphCtx.beginPath();
+      graphCtx.moveTo(30, 10);
+      graphCtx.lineTo(30, h - 20);
+      graphCtx.lineTo(w - 10, h - 20);
+      graphCtx.stroke();
+
+      const W = simState.workFunction;
+      const yW = (h - 20) - (W / 10) * (h - 30);
+
+      graphCtx.strokeStyle = '#FFB100';
+      graphCtx.setLineDash([4, 4]);
+      graphCtx.beginPath();
+      graphCtx.moveTo(30, yW);
+      graphCtx.lineTo(w - 10, yW);
+      graphCtx.stroke();
+      graphCtx.setLineDash([]);
+
+      const E = CONST_HC / simState.wavelength;
+      const xE = 30 + ((900 - simState.wavelength) / 800) * (w - 40);
+      const yE = (h - 20) - (E / 10) * (h - 30);
+
+      graphCtx.fillStyle = wavelengthToRGB(simState.wavelength);
+      graphCtx.beginPath();
+      graphCtx.arc(xE, Math.max(10, yE), 6, 0, Math.PI * 2);
+      graphCtx.fill();
+    }
+
+    function animate() {
+      if(ctx && canvas.width > 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const lightColor = wavelengthToRGB(simState.wavelength);
+        const E = CONST_HC / simState.wavelength;
+        const W = simState.workFunction;
+        const K = Math.max(0, E - W);
+
+        const sourceX = 30;
+        const targetX = canvas.width - 40;
+        const centerY = canvas.height / 2;
+
+        ctx.fillStyle = '#1E293B';
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(5, centerY - 25, 25, 50);
+
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(targetX, 20, 15, canvas.height - 40);
+
+        if(!simState.blocked && simState.intensity > 0) {
+          const spawnChance = simState.intensity / 100;
+          if(Math.random() < spawnChance) {
+            simState.photons.push({
+              x: sourceX,
+              y: centerY + (Math.random() * 20 - 10),
+              vx: 4 + (1000 - simState.wavelength) / 100,
+              color: lightColor
+            });
+          }
+        }
+
+        if(simState.blocked) {
+          ctx.fillStyle = '#FF0844';
+          ctx.fillRect(canvas.width / 2 - 10, 30, 20, canvas.height - 60);
+          ctx.fillStyle = '#FFF';
+          ctx.font = 'bold 10px Outfit';
+          ctx.fillText('BLOQUEO', canvas.width / 2 - 20, centerY);
+        }
+
+        for(let i = simState.photons.length - 1; i >= 0; i--) {
+          let p = simState.photons[i];
+          p.x += p.vx;
+
+          if(simState.blocked && p.x >= canvas.width / 2 - 10 && p.x <= canvas.width / 2 + 10) {
+            simState.photons.splice(i, 1);
+            continue;
+          }
+
+          if(p.x >= targetX) {
+            if(K > 0) {
+              simState.electrons.push({
+                x: targetX,
+                y: p.y,
+                vx: -(1 + K * 1.5),
+                vy: (Math.random() - 0.5) * 1.5
+              });
+            }
+            simState.photons.splice(i, 1);
+            continue;
+          }
+
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        for(let i = simState.electrons.length - 1; i >= 0; i--) {
+          let e = simState.electrons[i];
+          e.x += e.vx;
+          e.y += e.vy;
+
+          if(e.x <= sourceX || e.y < 0 || e.y > canvas.height) {
+            simState.electrons.splice(i, 1);
+            continue;
+          }
+
+          ctx.fillStyle = '#00F2FE';
+          ctx.shadowColor = '#00F2FE';
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function loadQuiz() {
+      const q = quizData[simState.currentQuizIndex];
+      document.getElementById('quizQuestion').innerText = `${simState.currentQuizIndex + 1}. ${q.q}`;
+      
+      const optionsContainer = document.getElementById('quizOptions');
+      optionsContainer.innerHTML = '';
+
+      document.getElementById('quizFeedback').style.display = 'none';
+      document.getElementById('nextQuizBtn').style.display = 'none';
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'quiz-option';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(idx);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selectedIdx) {
+      const q = quizData[simState.currentQuizIndex];
+      const options = document.querySelectorAll('.quiz-option');
+      
+      options.forEach(opt => opt.style.pointerEvents = 'none');
+
+      const feedback = document.getElementById('quizFeedback');
+      const feedbackText = document.getElementById('quizFeedbackText');
+      const feedbackEmoji = document.getElementById('quizEmoji');
+
+      if(selectedIdx === q.correct) {
+        options[selectedIdx].classList.add('correct');
+        feedbackEmoji.innerText = '🎉';
+        feedbackText.innerHTML = `<strong>¡Correcto!</strong> ${q.exp}`;
+        simState.score += 100;
+        document.getElementById('scoreBadge').innerText = `🏆 Puntuación: ${simState.score} Puntos`;
+        
+        if(window.confetti) {
+          confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+        }
+      } else {
+        options[selectedIdx].classList.add('wrong');
+        options[q.correct].classList.add('correct');
+        feedbackEmoji.innerText = '💡';
+        feedbackText.innerHTML = `<strong>Casi...</strong> ${q.exp}`;
+      }
+
+      feedback.style.display = 'flex';
+      
+      if(simState.currentQuizIndex < quizData.length - 1) {
+        document.getElementById('nextQuizBtn').style.display = 'block';
+      }
+    }
+
+    function loadNextQuestion() {
+      simState.currentQuizIndex++;
+      loadQuiz();
+    }
+
+    function initAll() {
+      resizeCanvas();
+      updatePhysics();
+    }
+
+    document.addEventListener('DOMContentLoaded', initAll);
+    window.addEventListener('load', initAll);
+    setTimeout(initAll, 300);
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
